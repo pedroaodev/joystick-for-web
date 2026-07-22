@@ -1,11 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Joystick For Web</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="joystick.css">
+  <title>Joystick For Web</title>
 </head>
+
 <body>
-    
+  <div id="board"></div>
+  <script src="joystick.js"></script>
+  <script>
+    window.joystick = new Joystick({
+      options: {
+        target: document.getElementById('board'),
+        idController: 'joystick',
+        locked: true,
+        lockPosition: { x: 750, y: 280 },
+        autoHidden: false
+      }
+    })
+    joystick.loadJoystick()
+  </script>
 </body>
+
 </html>

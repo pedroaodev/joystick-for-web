@@ -1,5 +1,5 @@
 class Joystick {
-    constructor ({ Options: options }) {
+    constructor ({ options }) {
         const {
             target,
             idController,
@@ -9,6 +9,7 @@ class Joystick {
         } = options
         this.target = target
         this.locked = locked
+        this.autoHidden = autoHidden
         this.lockPosition = lockPosition
         this.controller = document.createElement('div')
         this.controller.id = idController ?? 'joystick'
@@ -25,10 +26,10 @@ class Joystick {
                     <div class="s"> ↓ </div>
                     <span></span>
                 </div>
-                <div class="point i"></div>
+                <div class="range i"></div>
             </div>
         `
-        this.indicator = this.controller.querySelector('.point')
+        this.indicator = this.controller.querySelector('.range')
         this.dragging = false
         this.start = { x: 0, y: 0 }
         this.lastDir = null
@@ -40,11 +41,11 @@ class Joystick {
             West: '.w'
         }
     }
-    setDirection (x, y) {
+    setDirection = (x, y) => {
         this.direction = null
         if (Math.abs(x) > Math.abs(y)) {
-            if (x > 0) this.direction = 'East'
-            else if (x < 0) this.direction = 'West'
+            if (x > 0) this.direction = 'West'
+            else if (x < 0) this.direction = 'East'
         } else {
             if (y > 0) this.direction = 'North'
             else if (y < 0) this.direction = 'South'
@@ -55,22 +56,27 @@ class Joystick {
         }
         if (this.direction) {
             c.querySelector(d[this.direction])?.classList.add('active')
+            this.lastDir = this.direction
         }
     }
-    startJoystick (e) {
+    startJoystick = (e) => {
         this.dragging = true
-        if (this.locked) {
-            this.start = { ... this.lockPosition }
-        } else {
+        if (!this.start) {
+            return
+        }
+        if (!this.locked) {
             const point = e.touches ? e.touches[0] : e
             this.start.x = point.clientX
             this.start.y = point.clientY
+        } else if (this.lockPosition) {
+            this.start.x = this.lockPosition.x ?? 0
+            this.start.y = this.lockPosition.y ?? 0
         }
         this.controller.style.left = `${this.start.x}px`
         this.controller.style.top = `${this.start.y}px`
         this.controller.classList.add('show')
     }
-    moveJoystick (e) {
+    moveJoystick = (e) => {
         if (!this.dragging) return
         const point = e.touches ? e.touches[0] : e
         let x = this.start.x - point.clientX
@@ -83,16 +89,19 @@ class Joystick {
         this.indicator.style.transform = `translate(${-x}px, ${-y}px)`
         this.setDirection(x, y)
     }
-    stopJoystick () {
+    stopJoystick = () => {
         this.dragging = false
         this.indicator.style.transform = 'translate(0,0)'
         if (this.lastDir) {
             this.controller.querySelector(this.directions[this.lastDir])?.classList.remove('active')
         }
         this.lastDir = null
-        this.controller.classList.remove('show')
+        if (this.autoHidden) {
+            this.controller.classList.remove('show')
+        }
     }
     loadJoystick () {
+        
         if (!this.target) {
             console.warn('select the element target')
             return
@@ -101,22 +110,31 @@ class Joystick {
             console.warn("select another parent element")
             return
         }
+        if (this.locked) {
+            this.startJoystick()
+            this.stopJoystick()
+        }
+
         this.target.append(this.controller)
+        
         document.addEventListener('mousedown', this.startJoystick)
         document.addEventListener('mousemove', this.moveJoystick)
         document.addEventListener('mouseup', this.stopJoystick)
+        
         document.addEventListener('touchstart', this.startJoystick)
         document.addEventListener('touchmove', this.moveJoystick)
         document.addEventListener('touchend', this.stopJoystick)
     }
     ejectJoystick () {
+        
         document.removeEventListener('mousedown', this.startJoystick)
         document.removeEventListener('mousemove', this.moveJoystick)
         document.removeEventListener('mouseup', this.stopJoystick)
+        
         document.removeEventListener('touchstart', this.startJoystick)
         document.removeEventListener('touchmove', this.moveJoystick)
         document.removeEventListener('touchend', this.stopJoystick)
     }
 }
 
-// const e = new Joystick({position})
+// export default Joystick
